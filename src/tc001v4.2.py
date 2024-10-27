@@ -49,7 +49,7 @@ def is_raspberrypi():
     return False
 
 
-isPi = is_raspberrypi()
+isPi: bool = is_raspberrypi()
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -58,7 +58,7 @@ parser.add_argument(
     default=0,
     help="Video Device number e.g. 0, use v4l2-ctl --list-devices",
 )
-args = parser.parse_args()
+args: argparse.Namespace = parser.parse_args()
 
 if args.device:
     dev = args.device
@@ -83,7 +83,7 @@ newWidth = width * scale
 newHeight = height * scale
 alpha = 1.0  # Contrast control (1.0-3.0)
 colormap = 0
-font = cv2.FONT_HERSHEY_SIMPLEX
+font: int = cv2.FONT_HERSHEY_SIMPLEX
 dispFullscreen = False
 cv2.namedWindow("Thermal", cv2.WINDOW_GUI_NORMAL)
 cv2.resizeWindow("Thermal", newWidth, newHeight)
@@ -95,8 +95,8 @@ elapsed = "00:00:00"
 snaptime = "None"
 
 
-def rec():
-    now = time.strftime("%Y%m%d--%H%M%S")
+def rec() -> cv2.VideoWriter:
+    now: str = time.strftime("%Y%m%d--%H%M%S")
     # do NOT use mp4 here, it is flakey!
     videoOut = cv2.VideoWriter(
         now + "output.avi", cv2.VideoWriter_fourcc(*"XVID"), 25, (newWidth, newHeight)
@@ -104,16 +104,17 @@ def rec():
     return videoOut
 
 
-def snapshot(heatmap):
+def snapshot(heatmap) -> str:
     # I would put colons in here, but it Win throws a fit if you try and open them!
-    now = time.strftime("%Y%m%d-%H%M%S")
-    snaptime = time.strftime("%H:%M:%S")
+    now: str = time.strftime("%Y%m%d-%H%M%S")
+    snaptime: str = time.strftime("%H:%M:%S")
     cv2.imwrite("TC001" + now + ".png", heatmap)
     return snaptime
 
 
 while cap.isOpened():
     # Capture frame-by-frame
+    ret: bool
     ret, frame = cap.read()
     if ret is True:
         imdata, thdata = np.array_split(frame, 2)
@@ -152,7 +153,7 @@ while cap.isOpened():
         lomin = lomin * 256
         mintemp = himin + lomin
         mintemp = (mintemp / 64) - 273.15
-        mintemp = round(mintemp, 2)
+        mintemp = round(mintemp, 2) 
 
         # find the average temperature in the frame
         loavg = thdata[..., 1].mean()
@@ -173,41 +174,45 @@ while cap.isOpened():
         if rad > 0:
             bgr = cv2.blur(bgr, (rad, rad))
 
-        # apply colormap
-        if colormap == 0:
-            heatmap = cv2.applyColorMap(bgr, cv2.COLORMAP_JET)
-            cmapText = "Jet"
-        if colormap == 1:
-            heatmap = cv2.applyColorMap(bgr, cv2.COLORMAP_HOT)
-            cmapText = "Hot"
-        if colormap == 2:
-            heatmap = cv2.applyColorMap(bgr, cv2.COLORMAP_MAGMA)
-            cmapText = "Magma"
-        if colormap == 3:
-            heatmap = cv2.applyColorMap(bgr, cv2.COLORMAP_INFERNO)
-            cmapText = "Inferno"
-        if colormap == 4:
-            heatmap = cv2.applyColorMap(bgr, cv2.COLORMAP_PLASMA)
-            cmapText = "Plasma"
-        if colormap == 5:
-            heatmap = cv2.applyColorMap(bgr, cv2.COLORMAP_BONE)
-            cmapText = "Bone"
-        if colormap == 6:
-            heatmap = cv2.applyColorMap(bgr, cv2.COLORMAP_SPRING)
-            cmapText = "Spring"
-        if colormap == 7:
-            heatmap = cv2.applyColorMap(bgr, cv2.COLORMAP_AUTUMN)
-            cmapText = "Autumn"
-        if colormap == 8:
-            heatmap = cv2.applyColorMap(bgr, cv2.COLORMAP_VIRIDIS)
-            cmapText = "Viridis"
-        if colormap == 9:
-            heatmap = cv2.applyColorMap(bgr, cv2.COLORMAP_PARULA)
-            cmapText = "Parula"
-        if colormap == 10:
-            heatmap = cv2.applyColorMap(bgr, cv2.COLORMAP_RAINBOW)
-            heatmap = cv2.cvtColor(heatmap, cv2.COLOR_BGR2RGB)
-            cmapText = "Inv Rainbow"
+		# apply colormap using case match
+        match colormap:
+            case 0:
+                heatmap = cv2.applyColorMap(bgr, cv2.COLORMAP_JET)
+                cmapText = "Jet"
+            case 1:
+                heatmap = cv2.applyColorMap(bgr, cv2.COLORMAP_HOT)
+                cmapText = "Hot"
+            case 2:
+                heatmap = cv2.applyColorMap(bgr, cv2.COLORMAP_MAGMA)
+                cmapText = "Magma"
+            case 3:
+                heatmap = cv2.applyColorMap(bgr, cv2.COLORMAP_INFERNO)
+                cmapText = "Inferno"
+            case 4:
+                heatmap = cv2.applyColorMap(bgr, cv2.COLORMAP_PLASMA)
+                cmapText = "Plasma"
+            case 5:
+                heatmap = cv2.applyColorMap(bgr, cv2.COLORMAP_BONE)
+                cmapText = "Bone"
+            case 6:
+                heatmap = cv2.applyColorMap(bgr, cv2.COLORMAP_SPRING)
+                cmapText = "Spring"
+            case 7:
+                heatmap = cv2.applyColorMap(bgr, cv2.COLORMAP_AUTUMN)
+                cmapText = "Autumn"
+            case 8:
+                heatmap = cv2.applyColorMap(bgr, cv2.COLORMAP_VIRIDIS)
+                cmapText = "Viridis"
+            case 9:
+                heatmap = cv2.applyColorMap(bgr, cv2.COLORMAP_PARULA)
+                cmapText = "Parula"
+            case 10:
+                heatmap = cv2.applyColorMap(bgr, cv2.COLORMAP_RAINBOW)
+                heatmap = cv2.cvtColor(heatmap, cv2.COLOR_BGR2RGB)
+                cmapText = "Inv Rainbow"
+            case _:
+                heatmap = cv2.applyColorMap(bgr, cv2.COLORMAP_JET)
+                cmapText = "Jet"
 
         # print(heatmap.shape)
 
