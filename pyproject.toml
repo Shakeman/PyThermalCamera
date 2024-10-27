@@ -1,0 +1,13 @@
+[project]
+name = "pythermalcamera"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "numpy>=2.1.2",
+    "opencv-python>=4.10.0.84",
+    "pyright>=1.1.386",
+    "ruff>=0.7.1",
+]
+
