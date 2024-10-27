@@ -57,7 +57,7 @@ def is_raspberrypi() -> bool:
 
     """
     try:
-        with Path.open("/sys/firmware/devicetree/base/model") as m:
+        with Path("/sys/firmware/devicetree/base/model").open() as m:
             if "raspberry pi" in m.read().lower():
                 return True
     except Exception:  # noqa: BLE001, S110
