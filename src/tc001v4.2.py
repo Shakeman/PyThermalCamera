@@ -421,12 +421,6 @@ while cap.isOpened():
         # display image
         cv2.imshow("Thermal", heatmap)
 
-        if recording is True:
-            elapsed = time.time() - start
-            elapsed = time.strftime("%H:%M:%S", time.gmtime(elapsed))
-            # print(elapsed)
-            videoOut.write(heatmap)
-
         keyPress = cv2.waitKey(1)
         if keyPress == ord("a"):  # Increase blur radius
             rad += 1
@@ -507,6 +501,12 @@ while cap.isOpened():
             snaptime = snapshot(heatmap)
 
         if keyPress == ord("q"):
-            break
-            capture.release()
+            cap.release()
             cv2.destroyAllWindows()
+            break
+
+        if recording is True:
+            elapsed = time.time() - start
+            elapsed = time.strftime("%H:%M:%S", time.gmtime(elapsed))
+            # print(elapsed)
+            videoOut.write(heatmap)
