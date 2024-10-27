@@ -4,6 +4,11 @@ Les Wright 21 June 2023
 https://youtube.com/leslaboratory
 A Python program to read, parse and display thermal data from the Topdon TC001 Thermal camera!
 """
+import cv2
+import numpy as np
+import argparse
+import time
+import io
 
 print("Les Wright 21 June 2023")
 print("https://youtube.com/leslaboratory")
@@ -30,12 +35,6 @@ print("r t: Record and Stop")
 print("p : Snapshot")
 print("m : Cycle through ColorMaps")
 print("h : Toggle HUD")
-
-import cv2
-import numpy as np
-import argparse
-import time
-import io
 
 
 # We need to know if we are running on the Pi, because openCV behaves a little oddly on all the builds!
@@ -71,7 +70,7 @@ cap = cv2.VideoCapture("/dev/video" + str(dev), cv2.CAP_V4L)
 # cap = cv2.VideoCapture(0)
 # pull in the video but do NOT automatically convert to RGB, else it breaks the temperature data!
 # https://stackoverflow.com/questions/63108721/opencv-setting-videocap-property-to-cap-prop-convert-rgb-generates-weird-boolean
-if isPi == True:
+if isPi is True:
     cap.set(cv2.CAP_PROP_CONVERT_RGB, 0.0)
 else:
     cap.set(cv2.CAP_PROP_CONVERT_RGB, False)
@@ -116,7 +115,7 @@ def snapshot(heatmap):
 while cap.isOpened():
     # Capture frame-by-frame
     ret, frame = cap.read()
-    if ret == True:
+    if ret is True:
         imdata, thdata = np.array_split(frame, 2)
         # now parse the data from the bottom frame and convert to temp!
         # https://www.eevblog.com/forum/thermal-imaging/infiray-and-their-p2-pro-discussion/200/
@@ -264,7 +263,7 @@ while cap.isOpened():
             cv2.LINE_AA,
         )
 
-        if hud == True:
+        if hud is True:
             # display black box for our data
             cv2.rectangle(heatmap, (0, 0), (160, 120), (0, 0, 0), -1)
             # put text in the box
@@ -345,7 +344,7 @@ while cap.isOpened():
                 cv2.LINE_AA,
             )
 
-            if recording == False:
+            if recording is False:
                 cv2.putText(
                     heatmap,
                     "Recording: " + elapsed,
@@ -356,7 +355,7 @@ while cap.isOpened():
                     1,
                     cv2.LINE_AA,
                 )
-            if recording == True:
+            if recording is True:
                 cv2.putText(
                     heatmap,
                     "Recording: " + elapsed,
@@ -422,7 +421,7 @@ while cap.isOpened():
         # display image
         cv2.imshow("Thermal", heatmap)
 
-        if recording == True:
+        if recording is True:
             elapsed = time.time() - start
             elapsed = time.strftime("%H:%M:%S", time.gmtime(elapsed))
             # print(elapsed)
@@ -449,7 +448,7 @@ while cap.isOpened():
                 scale = 5
             newWidth = width * scale
             newHeight = height * scale
-            if dispFullscreen == False and isPi == False:
+            if dispFullscreen is False and isPi is False:
                 cv2.resizeWindow("Thermal", newWidth, newHeight)
         if keyPress == ord("c"):  # Decrease scale
             scale -= 1
@@ -457,7 +456,7 @@ while cap.isOpened():
                 scale = 1
             newWidth = width * scale
             newHeight = height * scale
-            if dispFullscreen == False and isPi == False:
+            if dispFullscreen is False and isPi is False:
                 cv2.resizeWindow("Thermal", newWidth, newHeight)
 
         if keyPress == ord("q"):  # enable fullscreen
@@ -486,9 +485,9 @@ while cap.isOpened():
                 alpha = 0.0
 
         if keyPress == ord("h"):
-            if hud == True:
+            if hud is True:
                 hud = False
-            elif hud == False:
+            elif hud is False:
                 hud = True
 
         if keyPress == ord("m"):  # m to cycle through color maps
@@ -496,7 +495,7 @@ while cap.isOpened():
             if colormap == 11:
                 colormap = 0
 
-        if keyPress == ord("r") and recording == False:  # r to start reording
+        if keyPress == ord("r") and recording is False:  # r to start reording
             videoOut = rec()
             recording = True
             start = time.time()
