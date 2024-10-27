@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
-"""Les Wright 21 June 2023
+"""Les Wright 21 June 2023.
+
 https://youtube.com/leslaboratory
-A Python program to read, parse and display thermal data from the Topdon TC001 Thermal camera!
+
+A Python program to read, parse and display thermal data from the Topdon TC001
+Thermal camera!
 """
+
 import argparse
 import time
 
@@ -98,7 +102,10 @@ def rec() -> cv2.VideoWriter:
     now: str = time.strftime("%Y%m%d--%H%M%S")
     # do NOT use mp4 here, it is flakey!
     videoOut = cv2.VideoWriter(
-        now + "output.avi", cv2.VideoWriter_fourcc(*"XVID"), 25, (newWidth, newHeight),
+        now + "output.avi",
+        cv2.VideoWriter_fourcc(*"XVID"),
+        25,
+        (newWidth, newHeight),
     )
     return videoOut
 
@@ -168,12 +175,14 @@ while cap.isOpened():
         bgr = cv2.convertScaleAbs(bgr, alpha=alpha)  # Contrast
         # bicubic interpolate, upscale and blur
         bgr = cv2.resize(
-            bgr, (newWidth, newHeight), interpolation=cv2.INTER_CUBIC,
+            bgr,
+            (newWidth, newHeight),
+            interpolation=cv2.INTER_CUBIC,
         )  # Scale up!
         if rad > 0:
             bgr = cv2.blur(bgr, (rad, rad))
 
-		# apply colormap using case match
+        # apply colormap using case match
         match colormap:
             case 0:
                 heatmap = cv2.applyColorMap(bgr, cv2.COLORMAP_JET)
@@ -457,13 +466,17 @@ while cap.isOpened():
             dispFullscreen = True
             cv2.namedWindow("Thermal", cv2.WND_PROP_FULLSCREEN)
             cv2.setWindowProperty(
-                "Thermal", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN,
+                "Thermal",
+                cv2.WND_PROP_FULLSCREEN,
+                cv2.WINDOW_FULLSCREEN,
             )
         if keyPress == ord("w"):  # disable fullscreen
             dispFullscreen = False
             cv2.namedWindow("Thermal", cv2.WINDOW_GUI_NORMAL)
             cv2.setWindowProperty(
-                "Thermal", cv2.WND_PROP_AUTOSIZE, cv2.WINDOW_GUI_NORMAL,
+                "Thermal",
+                cv2.WND_PROP_AUTOSIZE,
+                cv2.WINDOW_GUI_NORMAL,
             )
             cv2.resizeWindow("Thermal", newWidth, newHeight)
 
