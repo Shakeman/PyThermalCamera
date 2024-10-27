@@ -1,35 +1,34 @@
 #!/usr/bin/env python3
-"""
-Les Wright 21 June 2023
+"""Les Wright 21 June 2023
 https://youtube.com/leslaboratory
 A Python program to read, parse and display thermal data from the Topdon TC001 Thermal camera!
 """
-import cv2
-import numpy as np
 import argparse
 import time
-import io
+
+import cv2
+import numpy as np
 
 print("Les Wright 21 June 2023")
 print("https://youtube.com/leslaboratory")
 print(
-    "A Python program to read, parse and display thermal data from the Topdon TC001 Thermal camera!"
+    "A Python program to read, parse and display thermal data from the Topdon TC001 Thermal camera!",
 )
-print("")
+print()
 print("Tested on Debian all features are working correctly")
 print("This will work on the Pi However a number of workarounds are implemented!")
 print("Seemingly there are bugs in the compiled version of cv2 that ships with the Pi!")
-print("")
+print()
 print("Key Bindings:")
-print("")
+print()
 print("a z: Increase/Decrease Blur")
 print("s x: Floating High and Low Temp Label Threshold")
 print(
-    "d c: Change Interpolated scale Note: This will not change the window size on the Pi"
+    "d c: Change Interpolated scale Note: This will not change the window size on the Pi",
 )
 print("f v: Contrast")
 print(
-    "q w: Fullscreen Windowed (note going back to windowed does not seem to work on the Pi!)"
+    "q w: Fullscreen Windowed (note going back to windowed does not seem to work on the Pi!)",
 )
 print("r t: Record and Stop")
 print("p : Snapshot")
@@ -41,7 +40,7 @@ print("h : Toggle HUD")
 # https://raspberrypi.stackexchange.com/questions/5100/detect-that-a-python-program-is-running-on-the-pi
 def is_raspberrypi():
     try:
-        with io.open("/sys/firmware/devicetree/base/model", "r") as m:
+        with open("/sys/firmware/devicetree/base/model") as m:
             if "raspberry pi" in m.read().lower():
                 return True
     except Exception:
@@ -99,7 +98,7 @@ def rec() -> cv2.VideoWriter:
     now: str = time.strftime("%Y%m%d--%H%M%S")
     # do NOT use mp4 here, it is flakey!
     videoOut = cv2.VideoWriter(
-        now + "output.avi", cv2.VideoWriter_fourcc(*"XVID"), 25, (newWidth, newHeight)
+        now + "output.avi", cv2.VideoWriter_fourcc(*"XVID"), 25, (newWidth, newHeight),
     )
     return videoOut
 
@@ -153,7 +152,7 @@ while cap.isOpened():
         lomin = lomin * 256
         mintemp = himin + lomin
         mintemp = (mintemp / 64) - 273.15
-        mintemp = round(mintemp, 2) 
+        mintemp = round(mintemp, 2)
 
         # find the average temperature in the frame
         loavg = thdata[..., 1].mean()
@@ -169,7 +168,7 @@ while cap.isOpened():
         bgr = cv2.convertScaleAbs(bgr, alpha=alpha)  # Contrast
         # bicubic interpolate, upscale and blur
         bgr = cv2.resize(
-            bgr, (newWidth, newHeight), interpolation=cv2.INTER_CUBIC
+            bgr, (newWidth, newHeight), interpolation=cv2.INTER_CUBIC,
         )  # Scale up!
         if rad > 0:
             bgr = cv2.blur(bgr, (rad, rad))
@@ -431,28 +430,24 @@ while cap.isOpened():
             rad += 1
         if keyPress == ord("z"):  # Decrease blur radius
             rad -= 1
-            if rad <= 0:
-                rad = 0
+            rad = max(0, rad)
 
         if keyPress == ord("s"):  # Increase threshold
             threshold += 1
         if keyPress == ord("x"):  # Decrease threashold
             threshold -= 1
-            if threshold <= 0:
-                threshold = 0
+            threshold = max(0, threshold)
 
         if keyPress == ord("d"):  # Increase scale
             scale += 1
-            if scale >= 5:
-                scale = 5
+            scale = min(5, scale)
             newWidth: int = width * scale
             newHeight: int = height * scale
             if dispFullscreen is False and isPi is False:
                 cv2.resizeWindow("Thermal", newWidth, newHeight)
         if keyPress == ord("c"):  # Decrease scale
             scale -= 1
-            if scale <= 1:
-                scale = 1
+            scale = max(1, scale)
             newWidth = width * scale
             newHeight = height * scale
             if dispFullscreen is False and isPi is False:
@@ -462,21 +457,20 @@ while cap.isOpened():
             dispFullscreen = True
             cv2.namedWindow("Thermal", cv2.WND_PROP_FULLSCREEN)
             cv2.setWindowProperty(
-                "Thermal", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN
+                "Thermal", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN,
             )
         if keyPress == ord("w"):  # disable fullscreen
             dispFullscreen = False
             cv2.namedWindow("Thermal", cv2.WINDOW_GUI_NORMAL)
             cv2.setWindowProperty(
-                "Thermal", cv2.WND_PROP_AUTOSIZE, cv2.WINDOW_GUI_NORMAL
+                "Thermal", cv2.WND_PROP_AUTOSIZE, cv2.WINDOW_GUI_NORMAL,
             )
             cv2.resizeWindow("Thermal", newWidth, newHeight)
 
         if keyPress == ord("f"):  # contrast+
             alpha += 0.1
             alpha = round(alpha, 1)  # fix round error
-            if alpha >= 3.0:
-                alpha = 3.0
+            alpha = min(3.0, alpha)
         if keyPress == ord("v"):  # contrast-
             alpha -= 0.1
             alpha: float = round(alpha, 1)  # fix round error

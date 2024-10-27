@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
 
-import cv2
 import argparse
+
+import cv2
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
