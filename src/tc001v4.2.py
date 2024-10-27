@@ -426,7 +426,7 @@ while cap.isOpened():
         # display image
         cv2.imshow("Thermal", heatmap)
 
-        keyPress = cv2.waitKey(1)
+        keyPress: int = cv2.waitKey(1)
         if keyPress == ord("a"):  # Increase blur radius
             rad += 1
         if keyPress == ord("z"):  # Decrease blur radius
@@ -445,8 +445,8 @@ while cap.isOpened():
             scale += 1
             if scale >= 5:
                 scale = 5
-            newWidth = width * scale
-            newHeight = height * scale
+            newWidth: int = width * scale
+            newHeight: int = height * scale
             if dispFullscreen is False and isPi is False:
                 cv2.resizeWindow("Thermal", newWidth, newHeight)
         if keyPress == ord("c"):  # Decrease scale
@@ -479,7 +479,7 @@ while cap.isOpened():
                 alpha = 3.0
         if keyPress == ord("v"):  # contrast-
             alpha -= 0.1
-            alpha = round(alpha, 1)  # fix round error
+            alpha: float = round(alpha, 1)  # fix round error
             if alpha <= 0:
                 alpha = 0.0
 
@@ -495,15 +495,15 @@ while cap.isOpened():
                 colormap = 0
 
         if keyPress == ord("r") and recording is False:  # r to start reording
-            videoOut = rec()
+            videoOut: cv2.VideoWriter = rec()
             recording = True
-            start = time.time()
+            start: float = time.time()
         if keyPress == ord("t"):  # f to finish reording
             recording = False
             elapsed = "00:00:00"
 
         if keyPress == ord("p"):  # f to finish reording
-            snaptime = snapshot(heatmap)
+            snaptime: str = snapshot(heatmap)
 
         if keyPress == ord("q"):
             cap.release()
@@ -511,7 +511,7 @@ while cap.isOpened():
             break
 
         if recording is True:
-            elapsed = time.time() - start
-            elapsed = time.strftime("%H:%M:%S", time.gmtime(elapsed))
+            elapsed: float = time.time() - start
+            elapsed: str = time.strftime("%H:%M:%S", time.gmtime(elapsed))
             # print(elapsed)
             videoOut.write(heatmap)
