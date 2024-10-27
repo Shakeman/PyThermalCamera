@@ -46,12 +46,12 @@ while cap.isOpened():
     # Capture frame-by-frame
     ret, frame = cap.read()
 
-    if ret == True:
+    if ret is True:
         cv2.namedWindow("Thermal", cv2.WINDOW_NORMAL)
         cv2.imshow("Thermal", frame)
 
         keyPress = cv2.waitKey(3)
         if keyPress == ord("q"):
-            break
-            capture.release()
+            cap.release()
             cv2.destroyAllWindows()
+            break

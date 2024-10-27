@@ -1,5 +1,5 @@
 def main():
-    print("Hello from pythermalcamera-1!")
+    print("Hello from pythermalcamera!")
 
 
 if __name__ == "__main__":
