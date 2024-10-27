@@ -9,6 +9,7 @@ Thermal camera!
 
 import argparse
 import time
+from pathlib import Path
 
 import cv2
 import numpy as np
@@ -42,17 +43,29 @@ print("h : Toggle HUD")
 
 # We need to know if we are running on the Pi, because openCV behaves a little oddly on all the builds!
 # https://raspberrypi.stackexchange.com/questions/5100/detect-that-a-python-program-is-running-on-the-pi
-def is_raspberrypi():
+def is_raspberrypi() -> bool:
+    """Check if the current device is a Raspberry Pi.
+
+    This function attempts to determine if the current device is a Raspberry Pi
+    by reading the device model information from the file located at
+    "/sys/firmware/devicetree/base/model". If the file contains the string
+    "raspberry pi" (case insensitive), the function returns True. Otherwise,
+    it returns False.
+
+    Returns:
+        bool: True if the device is a Raspberry Pi, False otherwise.
+
+    """
     try:
-        with open("/sys/firmware/devicetree/base/model") as m:
+        with Path.open("/sys/firmware/devicetree/base/model") as m:
             if "raspberry pi" in m.read().lower():
                 return True
-    except Exception:
+    except Exception:  # noqa: BLE001, S110
         pass
     return False
 
 
-isPi: bool = is_raspberrypi()
+is_pi: bool = is_raspberrypi()
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -63,54 +76,51 @@ parser.add_argument(
 )
 args: argparse.Namespace = parser.parse_args()
 
-if args.device:
-    dev = args.device
-else:
-    dev = 0
+dev = args.device if args.device else 0
 
 # init video
 cap = cv2.VideoCapture("/dev/video" + str(dev), cv2.CAP_V4L)
 # cap = cv2.VideoCapture(0)
 # pull in the video but do NOT automatically convert to RGB, else it breaks the temperature data!
 # https://stackoverflow.com/questions/63108721/opencv-setting-videocap-property-to-cap-prop-convert-rgb-generates-weird-boolean
-if isPi is True:
-    cap.set(cv2.CAP_PROP_CONVERT_RGB, 0.0)
-else:
-    cap.set(cv2.CAP_PROP_CONVERT_RGB, False)
+cap.set(cv2.CAP_PROP_CONVERT_RGB, 0.0)
+
 
 # 256x192 General settings
 width = 256  # Sensor width
 height = 192  # sensor height
 scale = 3  # scale multiplier
-newWidth = width * scale
-newHeight = height * scale
+new_width = width * scale
+new_height = height * scale
 alpha = 1.0  # Contrast control (1.0-3.0)
 colormap = 0
+MAX_COLORMAPS = 11
 font: int = cv2.FONT_HERSHEY_SIMPLEX
-dispFullscreen = False
+disp_fullscreen = False
 cv2.namedWindow("Thermal", cv2.WINDOW_GUI_NORMAL)
-cv2.resizeWindow("Thermal", newWidth, newHeight)
+cv2.resizeWindow("Thermal", new_width, new_height)
 rad = 0  # blur radius
 threshold = 2
 hud = True
 recording = False
 elapsed = "00:00:00"
 snaptime = "None"
+start: float | None = None
 
 
 def rec() -> cv2.VideoWriter:
+    """Create and return a VideoWriter object for recording video."""
     now: str = time.strftime("%Y%m%d--%H%M%S")
     # do NOT use mp4 here, it is flakey!
-    videoOut = cv2.VideoWriter(
+    return cv2.VideoWriter(
         now + "output.avi",
         cv2.VideoWriter_fourcc(*"XVID"),
         25,
-        (newWidth, newHeight),
+        (new_width, new_height),
     )
-    return videoOut
 
 
-def snapshot(heatmap) -> str:
+def snapshot(heatmap) -> str:  # noqa: ANN001, D103
     # I would put colons in here, but it Win throws a fit if you try and open them!
     now: str = time.strftime("%Y%m%d-%H%M%S")
     snaptime: str = time.strftime("%H:%M:%S")
@@ -176,7 +186,7 @@ while cap.isOpened():
         # bicubic interpolate, upscale and blur
         bgr = cv2.resize(
             bgr,
-            (newWidth, newHeight),
+            (new_width, new_height),
             interpolation=cv2.INTER_CUBIC,
         )  # Scale up!
         if rad > 0:
@@ -186,71 +196,71 @@ while cap.isOpened():
         match colormap:
             case 0:
                 heatmap = cv2.applyColorMap(bgr, cv2.COLORMAP_JET)
-                cmapText = "Jet"
+                cmap_text = "Jet"
             case 1:
                 heatmap = cv2.applyColorMap(bgr, cv2.COLORMAP_HOT)
-                cmapText = "Hot"
+                cmap_text = "Hot"
             case 2:
                 heatmap = cv2.applyColorMap(bgr, cv2.COLORMAP_MAGMA)
-                cmapText = "Magma"
+                cmap_text = "Magma"
             case 3:
                 heatmap = cv2.applyColorMap(bgr, cv2.COLORMAP_INFERNO)
-                cmapText = "Inferno"
+                cmap_text = "Inferno"
             case 4:
                 heatmap = cv2.applyColorMap(bgr, cv2.COLORMAP_PLASMA)
-                cmapText = "Plasma"
+                cmap_text = "Plasma"
             case 5:
                 heatmap = cv2.applyColorMap(bgr, cv2.COLORMAP_BONE)
-                cmapText = "Bone"
+                cmap_text = "Bone"
             case 6:
                 heatmap = cv2.applyColorMap(bgr, cv2.COLORMAP_SPRING)
-                cmapText = "Spring"
+                cmap_text = "Spring"
             case 7:
                 heatmap = cv2.applyColorMap(bgr, cv2.COLORMAP_AUTUMN)
-                cmapText = "Autumn"
+                cmap_text = "Autumn"
             case 8:
                 heatmap = cv2.applyColorMap(bgr, cv2.COLORMAP_VIRIDIS)
-                cmapText = "Viridis"
+                cmap_text = "Viridis"
             case 9:
                 heatmap = cv2.applyColorMap(bgr, cv2.COLORMAP_PARULA)
-                cmapText = "Parula"
+                cmap_text = "Parula"
             case 10:
                 heatmap = cv2.applyColorMap(bgr, cv2.COLORMAP_RAINBOW)
                 heatmap = cv2.cvtColor(heatmap, cv2.COLOR_BGR2RGB)
-                cmapText = "Inv Rainbow"
+                cmap_text = "Inv Rainbow"
             case _:
                 heatmap = cv2.applyColorMap(bgr, cv2.COLORMAP_JET)
-                cmapText = "Jet"
+                cmap_text = "Jet"
 
         # print(heatmap.shape)
 
         # draw crosshairs
         cv2.line(
             heatmap,
-            (int(newWidth / 2), int(newHeight / 2) + 20),
-            (int(newWidth / 2), int(newHeight / 2) - 20),
+            (int(new_width / 2), int(new_height / 2) + 20),
+            (int(new_width / 2), int(new_height / 2) - 20),
             (255, 255, 255),
             2,
         )  # vline
         cv2.line(
             heatmap,
-            (int(newWidth / 2) + 20, int(newHeight / 2)),
-            (int(newWidth / 2) - 20, int(newHeight / 2)),
+            (int(new_width / 2) + 20, int(new_height / 2)),
+            (int(new_width / 2) - 20, int(new_height / 2)),
             (255, 255, 255),
             2,
         )  # hline
 
         cv2.line(
             heatmap,
-            (int(newWidth / 2), int(newHeight / 2) + 20),
-            (int(newWidth / 2), int(newHeight / 2) - 20),
+            (int(new_width / 2), int(new_height / 2) + 20),
+            (int(new_width / 2), int(new_height / 2) - 20),
             (0, 0, 0),
             1,
         )  # vline
         cv2.line(
             heatmap,
-            (int(newWidth / 2) + 20, int(newHeight / 2)),
-            (int(newWidth / 2) - 20, int(newHeight / 2)),
+            (int(new_width / 2) + 20, int(new_height / 2)),
+            (int(new_width / 2) - 20, int(new_height / 2)),
             (0, 0, 0),
             1,
         )  # hline
@@ -258,7 +268,7 @@ while cap.isOpened():
         cv2.putText(
             heatmap,
             str(temp) + " C",
-            (int(newWidth / 2) + 10, int(newHeight / 2) - 10),
+            (int(new_width / 2) + 10, int(new_height / 2) - 10),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.45,
             (0, 0, 0),
@@ -268,7 +278,7 @@ while cap.isOpened():
         cv2.putText(
             heatmap,
             str(temp) + " C",
-            (int(newWidth / 2) + 10, int(newHeight / 2) - 10),
+            (int(new_width / 2) + 10, int(new_height / 2) - 10),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.45,
             (0, 255, 255),
@@ -304,7 +314,7 @@ while cap.isOpened():
 
             cv2.putText(
                 heatmap,
-                "Colormap: " + cmapText,
+                "Colormap: " + cmap_text,
                 (10, 42),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 0.4,
@@ -434,91 +444,88 @@ while cap.isOpened():
         # display image
         cv2.imshow("Thermal", heatmap)
 
-        keyPress: int = cv2.waitKey(1)
-        if keyPress == ord("a"):  # Increase blur radius
+        key_press: int = cv2.waitKey(1)
+        if key_press == ord("a"):  # Increase blur radius
             rad += 1
-        if keyPress == ord("z"):  # Decrease blur radius
+        if key_press == ord("z"):  # Decrease blur radius
             rad -= 1
             rad = max(0, rad)
 
-        if keyPress == ord("s"):  # Increase threshold
+        if key_press == ord("s"):  # Increase threshold
             threshold += 1
-        if keyPress == ord("x"):  # Decrease threashold
+        if key_press == ord("x"):  # Decrease threashold
             threshold -= 1
             threshold = max(0, threshold)
 
-        if keyPress == ord("d"):  # Increase scale
+        if key_press == ord("d"):  # Increase scale
             scale += 1
             scale = min(5, scale)
-            newWidth: int = width * scale
-            newHeight: int = height * scale
-            if dispFullscreen is False and isPi is False:
-                cv2.resizeWindow("Thermal", newWidth, newHeight)
-        if keyPress == ord("c"):  # Decrease scale
+            new_width: int = width * scale
+            new_height: int = height * scale
+            if disp_fullscreen is False and is_pi is False:
+                cv2.resizeWindow("Thermal", new_width, new_height)
+        if key_press == ord("c"):  # Decrease scale
             scale -= 1
             scale = max(1, scale)
-            newWidth = width * scale
-            newHeight = height * scale
-            if dispFullscreen is False and isPi is False:
-                cv2.resizeWindow("Thermal", newWidth, newHeight)
+            new_width = width * scale
+            new_height = height * scale
+            if disp_fullscreen is False and is_pi is False:
+                cv2.resizeWindow("Thermal", new_width, new_height)
 
-        if keyPress == ord("q"):  # enable fullscreen
-            dispFullscreen = True
+        if key_press == ord("q"):  # enable fullscreen
+            disp_fullscreen = True
             cv2.namedWindow("Thermal", cv2.WND_PROP_FULLSCREEN)
             cv2.setWindowProperty(
                 "Thermal",
                 cv2.WND_PROP_FULLSCREEN,
                 cv2.WINDOW_FULLSCREEN,
             )
-        if keyPress == ord("w"):  # disable fullscreen
-            dispFullscreen = False
+        if key_press == ord("w"):  # disable fullscreen
+            disp_fullscreen = False
             cv2.namedWindow("Thermal", cv2.WINDOW_GUI_NORMAL)
             cv2.setWindowProperty(
                 "Thermal",
                 cv2.WND_PROP_AUTOSIZE,
                 cv2.WINDOW_GUI_NORMAL,
             )
-            cv2.resizeWindow("Thermal", newWidth, newHeight)
+            cv2.resizeWindow("Thermal", new_width, new_height)
 
-        if keyPress == ord("f"):  # contrast+
+        if key_press == ord("f"):  # contrast+
             alpha += 0.1
             alpha = round(alpha, 1)  # fix round error
             alpha = min(3.0, alpha)
-        if keyPress == ord("v"):  # contrast-
+        if key_press == ord("v"):  # contrast-
             alpha -= 0.1
             alpha: float = round(alpha, 1)  # fix round error
             if alpha <= 0:
                 alpha = 0.0
 
-        if keyPress == ord("h"):
+        if key_press == ord("h"):
             if hud is True:
                 hud = False
             elif hud is False:
                 hud = True
 
-        if keyPress == ord("m"):  # m to cycle through color maps
-            colormap += 1
-            if colormap == 11:
-                colormap = 0
+        if key_press == ord("m"):  # m to cycle through color maps
+            colormap = 0 if colormap == MAX_COLORMAPS else colormap + 1
 
-        if keyPress == ord("r") and recording is False:  # r to start reording
-            videoOut: cv2.VideoWriter = rec()
+        if key_press == ord("r") and recording is False:  # r to start reording
+            video_out: cv2.VideoWriter = rec()
             recording = True
-            start: float = time.time()
-        if keyPress == ord("t"):  # f to finish reording
+            start = time.time()
+        if key_press == ord("t"):  # f to finish reording
             recording = False
             elapsed = "00:00:00"
 
-        if keyPress == ord("p"):  # f to finish reording
+        if key_press == ord("p"):  # f to finish reording
             snaptime: str = snapshot(heatmap)
 
-        if keyPress == ord("q"):
+        if key_press == ord("q"):
             cap.release()
             cv2.destroyAllWindows()
             break
 
-        if recording is True:
-            elapsed: float = time.time() - start
-            elapsed: str = time.strftime("%H:%M:%S", time.gmtime(elapsed))
+        if recording is True and start is not None:
+            elapsed: str = time.strftime("%H:%M:%S", time.gmtime(time.time() - start))
             # print(elapsed)
-            videoOut.write(heatmap)
+            video_out.write(heatmap)
