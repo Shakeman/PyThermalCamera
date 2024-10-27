@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+"""Module to capture video from a thermal camera and display it using OpenCV."""
 
 
 import argparse
@@ -12,12 +12,9 @@ parser.add_argument(
     default=0,
     help="Video Device number e.g. 0, use v4l2-ctl --list-devices",
 )
-args = parser.parse_args()
+args: argparse.Namespace = parser.parse_args()
 
-if args.device:
-    dev = args.device
-else:
-    dev = 0
+dev = args.device if args.device else 0
 
 
 # init video
@@ -41,7 +38,7 @@ ioctl: VIDIOC_ENUM_FMT
 width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 cv2.namedWindow("Thermal", cv2.WINDOW_GUI_NORMAL)
-font = cv2.FONT_HERSHEY_SIMPLEX
+font: int = cv2.FONT_HERSHEY_SIMPLEX
 
 while cap.isOpened():
     # Capture frame-by-frame
@@ -51,8 +48,8 @@ while cap.isOpened():
         cv2.namedWindow("Thermal", cv2.WINDOW_NORMAL)
         cv2.imshow("Thermal", frame)
 
-        keyPress = cv2.waitKey(3)
-        if keyPress == ord("q"):
+        key_press: int = cv2.waitKey(3)
+        if key_press == ord("q"):
             cap.release()
             cv2.destroyAllWindows()
             break
