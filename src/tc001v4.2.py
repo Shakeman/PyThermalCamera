@@ -105,7 +105,7 @@ hud = True
 recording = False
 elapsed = "00:00:00"
 snaptime = "None"
-start: float | None = None
+start: float = time.time()
 
 
 def rec() -> cv2.VideoWriter:
@@ -525,7 +525,7 @@ while cap.isOpened():
             cv2.destroyAllWindows()
             break
 
-        if recording is True and start is not None:
+        if recording is True:
             elapsed: str = time.strftime("%H:%M:%S", time.gmtime(time.time() - start))
             # print(elapsed)
             video_out.write(heatmap)
